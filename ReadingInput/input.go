@@ -30,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	resp, err := http.Get(*url)
-	defer resp.Close()
+	defer resp.Body.Close()
 	if err != nil {
 		panic(err)
 	}

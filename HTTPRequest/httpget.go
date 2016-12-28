@@ -12,7 +12,7 @@ func main() {
 	url := os.Args[1]
 
 	r, err := http.Get(url)
-	defer r.Close()
+	defer r.Body.Close()
 	if err != nil {
 		panic(err)
 	}

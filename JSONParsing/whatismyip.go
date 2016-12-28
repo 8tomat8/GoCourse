@@ -9,7 +9,7 @@ import (
 
 func main() {
 	r, err := http.Get("http://httpbin.org/ip")
-	defer r.Close()
+	defer r.Body.Close()
 	if err != nil {
 		panic(err)
 	}
