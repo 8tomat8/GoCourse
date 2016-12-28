@@ -6,8 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"regexp"
-	"github.com/8tomat8/GoCourse/LineCountingHTTPService/handlers"
-	"github.com/8tomat8/GoCourse/LineCountingHTTPService/library"
+	"github.com/8tomat8/GoCourse/21.LineCountingHTTPService/handlers"
+	"github.com/8tomat8/GoCourse/21.LineCountingHTTPService/library"
 )
 
 type handlerRoute struct {

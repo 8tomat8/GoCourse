@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	"github.com/8tomat8/GoCourse/LineCountingHTTPService/library"
-	"github.com/8tomat8/GoCourse/LineCountingHTTPService/common"
+	"github.com/8tomat8/GoCourse/21.LineCountingHTTPService/library"
+	"github.com/8tomat8/GoCourse/21.LineCountingHTTPService/common"
 	"encoding/json"
 	"strings"
 )

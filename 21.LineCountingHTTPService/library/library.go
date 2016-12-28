@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"os"
-	"github.com/8tomat8/GoCourse/LineCountingHTTPService/common"
+	"github.com/8tomat8/GoCourse/21.LineCountingHTTPService/common"
 )
 
 var inst *library
