@@ -10,6 +10,7 @@ import (
 	"io"
 	"github.com/golang/glog"
 	"sync"
+	"errors"
 )
 
 type empty struct{}
@@ -36,35 +37,38 @@ func main() {
 	wg.Wait()
 }
 
-func download(link string, sem *chan empty, wg *sync.WaitGroup) {
+func download(link string, sem *chan empty, wg *sync.WaitGroup) error {
 	defer wg.Done()
 	defer func() { <-*sem }()
 	tokens := strings.Split(link, "/")
 	fileName := tokens[len(tokens) - 1]
 
 	if _, err := os.Stat("./" + fileName); err == nil {
-		glog.Error(fmt.Sprintf("File %v already exist. Skipping it.", fileName))
-		return
+		return processError(fmt.Sprintf("File %v already exist. Skipping it.", fileName))
 	}
 
 	glog.Info("Downloading ", link, " to ", fileName)
 	output, err := os.Create(fileName)
 	if err != nil {
-		glog.Error("Error while creating", fileName, "-", err)
-		return
+		return processError(fmt.Sprintf("Error while creating %v - %v", fileName, err.Error()))
 	}
 	defer output.Close()
 
 	response, err := http.Get(link)
 	if err != nil {
-		glog.Error(fmt.Sprintf("Error while downloading %v - %v. Skipping it.", link, err))
-		return
+		return processError(fmt.Sprintf("Error while downloading %v - %v. Skipping it.", link, err))
 	}
 	defer response.Body.Close()
 
 	_, err = io.Copy(output, response.Body)
 	if err != nil {
-		glog.Error(fmt.Sprintf("Error while downloading body %v - %v. Skipping it.", link, err))
-		return
+		return processError(fmt.Sprintf("Error while downloading body %v - %v. Skipping it.", link, err))
 	}
+	return nil
+}
+
+
+func processError(s string) error {
+	glog.Error(s)
+	return errors.New(s)
 }
