@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"io"
 	"github.com/golang/glog"
+	"sync"
 )
 
 type empty struct{}
@@ -18,30 +19,37 @@ func main() {
 	var limit = flag.Uint("limit", 2, "Limit of concurrent workers.")
 	var data = flag.String("data", "[]", "JSON list of urls to download.")
 	flag.Parse()
-
 	var links = []string{}
 
-	json.Unmarshal([]byte(data), &links)
-
-	sem := make(chan empty)
-	for _, link := range links {
-		sem <- empty{}
-		go download(link, &sem)
+	err := json.Unmarshal([]byte(*data), &links)
+	if err != nil {
+		panic(err)
 	}
 
+	sem := make(chan empty, int(*limit))
+	wg := &sync.WaitGroup{}
+	for _, link := range links {
+		sem <- empty{}
+		wg.Add(1)
+		go download(link, &sem, wg)
+	}
+	wg.Wait()
 }
 
-func download(link string, sem <-chan empty) {
+func download(link string, sem *chan empty, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer func() { <-*sem }()
 	tokens := strings.Split(link, "/")
-	fileName := tokens[len(tokens)-1]
-	glog.Info("Downloading", link, "to", fileName)
+	fileName := tokens[len(tokens) - 1]
 
+	if _, err := os.Stat("./" + fileName); err == nil {
+		glog.Error(fmt.Sprintf("File %v already exist. Skipping it.", fileName))
+		return
+	}
+
+	glog.Info("Downloading ", link, " to ", fileName)
 	output, err := os.Create(fileName)
 	if err != nil {
-		if os.IsExist(err) {
-			glog.Error(fmt.Sprintf("File %v already exist. Skipping it.", fileName))
-			return
-		}
 		glog.Error("Error while creating", fileName, "-", err)
 		return
 	}
@@ -54,11 +62,9 @@ func download(link string, sem <-chan empty) {
 	}
 	defer response.Body.Close()
 
-	n, err := io.Copy(output, response.Body)
+	_, err = io.Copy(output, response.Body)
 	if err != nil {
 		glog.Error(fmt.Sprintf("Error while downloading body %v - %v. Skipping it.", link, err))
 		return
 	}
-
-	<-sem
 }
