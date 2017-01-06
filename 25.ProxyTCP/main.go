@@ -13,6 +13,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer listener.Close()
 
 	lConn, err := listener.Accept()
 	if err != nil {
