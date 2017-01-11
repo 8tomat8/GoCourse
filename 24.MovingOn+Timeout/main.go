@@ -32,7 +32,16 @@ func makeHTTPCalls(workers *int, server *httptest.Server) string {
 		go makeHTTPCall(server, &rv)
 	}
 
-	return <-rv
+	var result string
+
+	for {
+		select {
+		case <- time.After(time.Second):
+			return "Всё совсем не чотко..."
+		case result = <- rv:
+			return result
+		}
+	}
 }
 
 func makeHTTPCall(server *httptest.Server, ch *chan string) error {
@@ -42,7 +51,7 @@ func makeHTTPCall(server *httptest.Server, ch *chan string) error {
 	resp, err := client.Get(server.URL)
 
 	if err != nil {
-		glog.Error(err)
+		glog.Info(err)
 		return err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
