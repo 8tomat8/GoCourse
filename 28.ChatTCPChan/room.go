@@ -13,7 +13,7 @@ type room struct {
 
 func (r *room) sendMsg() {
 	for {
-		msg := <- r.Send
+		msg := <-r.Send
 		for _, u := range r.users {
 			if *u == *msg.Sender {
 				continue
@@ -27,12 +27,12 @@ func (r *room) listenMsg() {
 	for {
 		msg := <-r.Receive
 		switch msg.Command {
-		case "/send_msg":
+		case send_msg:
 			r.Send <- msg
-		case "/lobby":
+		case lobby:
 			r.removeUser(msg.Sender)
 			Chat.lobby.usersChan <- msg.Sender
-		case "/help":
+		case help:
 			fallthrough
 		default:
 			msg.Sender.MsgIn <- NewSystemMessage(`
@@ -54,9 +54,9 @@ func (r *room) listenLobbyMsg() {
 	for {
 		msg := <-r.Receive
 		switch msg.Command {
-		case "/change_name":
+		case change_name:
 			msg.Sender.changeName(msg.Msg)
-		case "/create_room":
+		case create_room:
 			newRoom, err := r.c.NewRoom(msg.Msg)
 			if err != nil {
 				msg.Sender.MsgIn <- NewSystemMessage(err.Error())
@@ -66,13 +66,13 @@ func (r *room) listenLobbyMsg() {
 
 			msg.Sender.r.removeUser(msg.Sender)
 			newRoom.usersChan <- msg.Sender
-		case "/list_rooms":
+		case list_rooms:
 			var list string = "\nList of avalible rooms:\n"
 			for _, elem := range r.c.rooms {
 				list = list + fmt.Sprintf("%s - %d users online\n", elem.name, len(elem.users))
 			}
 			msg.Sender.MsgIn <- NewSystemMessage(list)
-		case "/change_room":
+		case change_room:
 			targetRoom, ok := r.c.rooms[msg.Msg]
 			if !ok {
 				msg.Sender.MsgIn <- NewSystemMessage(fmt.Sprintf("Room with name %s does not exist.", msg.Msg))
@@ -80,7 +80,7 @@ func (r *room) listenLobbyMsg() {
 			}
 			r.removeUser(msg.Sender)
 			targetRoom.usersChan <- msg.Sender
-		case "/help":
+		case help:
 			fallthrough
 		default:
 			msg.Sender.MsgIn <- NewSystemMessage(`

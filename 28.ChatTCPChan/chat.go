@@ -16,11 +16,11 @@ func (c *chat) NewRoom(name string) (*room, error) {
 		return nil, errors.New("Room mane is too short!")
 	}
 	r := &room{
-		name:    name,
+		name:      name,
 		usersChan: make(chan *user),
-		Receive: make(chan *message, 5),
-		Send:    make(chan *message, 5),
-		users:   make(map[string]*user),
+		Receive:   make(chan *message, 5),
+		Send:      make(chan *message, 5),
+		users:     make(map[string]*user),
 	}
 	go r.listenMsg()
 	go r.sendMsg()
