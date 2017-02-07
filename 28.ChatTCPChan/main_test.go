@@ -171,4 +171,6 @@ func TestRoom(t *testing.T) {
 	if len(Chat.rooms[roomName].users) != 2 {
 		t.Fatal("Second user was not added! len(Chat.rooms) = ", len(Chat.rooms))
 	}
+	stop <- empty{}
+	<- stop
 }

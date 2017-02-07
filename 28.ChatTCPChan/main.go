@@ -21,6 +21,7 @@ type empty struct{}
 func main() {
 
 	host := flag.String("host", "127.0.0.1:12345", "Host")
+	metricsEvery := flag.Int("metrics_every", 30, "Every N seconds metrics will be returned to stdout")
 	flag.Parse()
 
 	ready := make(chan empty)
@@ -29,9 +30,11 @@ func main() {
 	<-ready
 	glog.Info("Chat server started on ", host)
 
-	sig := make(chan<- os.Signal)
+	go runMetrics(metricsEvery)
+	sig := make(chan os.Signal)
 	signal.Stop(sig)
 
+	<- sig
 	stop <- empty{}
 	glog.Info("Chat server has been interrupted...")
 }
@@ -42,6 +45,7 @@ func runApp(host *string, stop chan empty, ready chan empty) {
 		glog.Fatal(err)
 	}
 	defer listener.Close()
+	defer func() {stop <- empty{}}()
 
 	conns := make(chan net.Conn)
 
@@ -50,9 +54,10 @@ func runApp(host *string, stop chan empty, ready chan empty) {
 		for {
 			newConn, err := listener.Accept()
 			if err != nil {
-				glog.Error(err)
+				glog.Info(err)
 				errorsCount += 1
 				if errorsCount >= 2 {
+					glog.Error(err)
 					return
 				} else {
 					continue
@@ -68,7 +73,6 @@ func runApp(host *string, stop chan empty, ready chan empty) {
 	for {
 		select {
 		case <-stop:
-			stop <- empty{}
 			return
 		case conn := <- conns:
 			go handleNewConn(conn)

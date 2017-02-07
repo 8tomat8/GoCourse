@@ -4,7 +4,6 @@ import (
 	"net"
 	"fmt"
 	"github.com/golang/glog"
-	"io"
 )
 
 type user struct {
@@ -32,15 +31,12 @@ func (u *user) listenMsgIn() {
 }
 
 func (u *user) listenMsgOut() {
-	data := make([]byte, 1 << 10)
+	data := make([]byte, 1<<10)
 	for {
 		n, err := u.conn.Read(data)
-		if err == io.EOF {
+		if err != nil {
 			u.disconnect()
 			return
-		} else if err != nil {
-			glog.Error(err)
-			continue
 		}
 		msg := NewMessage(data[:n], u)
 		u.r.Receive <- msg
@@ -49,11 +45,11 @@ func (u *user) listenMsgOut() {
 
 func NewUser(conn net.Conn, name string) *user {
 	u := &user{
-		Name:name,
-		conn: conn,
-		MsgIn:make(chan *message),
-		stop: make(chan struct{}),
-		r:    Chat.lobby,
+		Name:  name,
+		conn:  conn,
+		MsgIn: make(chan *message),
+		stop:  make(chan struct{}),
+		r:     Chat.lobby,
 	}
 	go u.listenMsgIn()
 	go u.listenMsgOut()
@@ -77,5 +73,5 @@ func (u *user) disconnect() {
 }
 
 func NewSystemUser() *user {
-	return &user{Name:"System"}
+	return &user{Name: "System"}
 }

@@ -3,12 +3,13 @@ package main
 import "fmt"
 
 type room struct {
-	c         *chat
-	name      string
-	users     map[string]*user
-	Receive   chan *message
-	Send      chan *message
-	usersChan chan *user
+	c            *chat
+	name         string
+	users        map[string]*user
+	Receive      chan *message
+	Send         chan *message
+	usersChan    chan *user
+	sentMessages uint
 }
 
 func (r *room) sendMsg() {
@@ -29,6 +30,7 @@ func (r *room) listenMsg() {
 		switch msg.Command {
 		case send_msg:
 			r.Send <- msg
+			r.sentMessages += 1
 		case lobby:
 			r.removeUser(msg.Sender)
 			Chat.lobby.usersChan <- msg.Sender
